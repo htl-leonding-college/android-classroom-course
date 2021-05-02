@@ -29,8 +29,14 @@ endif::backend-html5[]
 
 
 * Source:
-** https://www.youtube.com/watch?v=lwAvI3WDXBY&t=601s[ROOM Database - #1 Create Database Schema | Android Studio Tutorial, window="_blank"]
+** https://www.youtube.com/watch?v=lwAvI3WDXBY[ROOM Database - #1 Create Database Schema | Android Studio Tutorial, window="_blank"]
 ** https://www.youtube.com/watch?v=UBCAWfztTrQ[ROOM Database - #2 Insert Data | Android Studio Tutorial, window ="_blank"]
+** https://www.youtube.com/watch?v=3USvr1Lz8g8[ROOM Database - #3 Read Data | Android Studio Tutorial, window ="_blank"]
+** https://www.youtube.com/watch?v=5rfBU75sguk[ROOM Database - #4 Update Data | Android Studio Tutorial, window ="_blank"]
+** https://www.youtube.com/watch?v=MFKOwKxdhwU[ROOM Database - #5 Delete Data | Android Studio Tutorial, window ="_blank"]
+
+* github-repo for project
+** https://github.com/htl-leonding-example/android-room-app
 
 == Create Database
 
@@ -276,7 +282,7 @@ image:room-004-configure-add-fragment.png[]
 
 image:room-005-connect-fragments.png[]
 
-== Create Packages for ListFragment and AddFragment
+== Create Packages for ListFragment and AddFragment (INSERT)
 
 * remove the codes in the fragment classes except function `onCreateView`
 
@@ -473,7 +479,7 @@ android:tint="@android:color/white"
         app:layout_constraintTop_toBottomOf="@+id/addFirstName_et" />
 
     <EditText
-        android:id="@+id/editTextNumber"
+        android:id="@+id/addAge_et"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -490,7 +496,7 @@ android:tint="@android:color/white"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="Add"
-        app:layout_constraintTop_toBottomOf="@+id/editTextNumber"
+        app:layout_constraintTop_toBottomOf="@+id/addAge_et"
         tools:layout_editor_absoluteX="147dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
 ----
@@ -611,338 +617,800 @@ image:room-014-emulator.png[width=40%]
 image:room-015-emulator.png[width=40%]
 --
 
-== Implement the ListFragment
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[source,javascript]
+== Implement the AddFragment
+
+[source,kotlin,linenums,highlight=22;29-62]
+----
+package at.htl.roomapp.fragments.add
+
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextUtils
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import at.htl.roomapp.R
+import at.htl.roomapp.data.User
+import at.htl.roomapp.data.UserViewModel
+import kotlinx.android.synthetic.main.fragment_add.*
+import kotlinx.android.synthetic.main.fragment_add.view.*
+
+
+class AddFragment : Fragment() {
+
+    private lateinit var mUserViewModel: UserViewModel
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_add, container, false)
+
+        mUserViewModel = ViewModelProvider(this).get(UserViewModel::class.java) //<.>
+
+        view.add_btn.setOnClickListener {
+            insertDataToDatabase()
+        }
+
+        return view
+    }
+
+    private fun insertDataToDatabase() {
+        val firstName = addFirstName_et.text.toString()
+        val lastName = addLastName_et.text.toString()
+        val age = addAge_et.text
+
+        if (inputCheck(firstName, lastName, age)) {
+            // Create User Object
+            val user = User(0, firstName, lastName, Integer.parseInt(age.toString())) // <.>
+            // Add Data to Database
+            mUserViewModel.addUser(user)
+            Toast.makeText(requireContext(), "successfully added!", Toast.LENGTH_LONG).show()
+            // Navigate back
+            findNavController().navigate(R.id.action_addFragment_to_listFragment)
+        } else {
+            Toast.makeText(requireContext(), "Please fill out all fields.", Toast.LENGTH_LONG)
+                .show()
+        }
+    }
+
+    private fun inputCheck(firstName: String, lastName: String, age: Editable): Boolean {
+        return !(TextUtils.isEmpty(firstName) && TextUtils.isEmpty(lastName) && age.isEmpty())
+    }
+
+}
 ----
 
+<.> Initialize the ViewModel. We are using the default ViewModelProvider.
+
+<.> We have to pass 0 for the id. But the database will use the auto-generated key.
+
+
+.After entering the values and clicking ADD the app navigates to the ListFragment
+[.clearfix]
+--
+image:room-016-emulator.png[width=40%]
+image:room-017-emulator.png[width=40%]
+--
+
+=== View database in Android Studio
+
+.Check, if the INSERT was successfull
+image:room-018-database-inspector.png[]
+
+
+<1> open the Database Inspector
+<2> choose the device / emulator and app
+<3> all tables of the app are shown automatically - choose one
+<4> you can see the contents - NOTICE: the id is set to 1, even 0 was passed as parameter
+
+TIP: The `room_master_table` stores an unique `identity_hash` for each version of the database https://stackoverflow.com/a/57549425/9818338[[source\], window="_blank"]
+
+.In the Device File Explorer you can find the database file
+image:room-019-device-file-explorer.png[]
+
+=== Download Database and View in IntelliJ Ultimate / Datagrip
+
+image:room-020-save-database.png[]
+
+.Download all three files
+image:room-021-save-database.png[]
+
+image:room-022-view-database-local.png[]
+
+image:room-023-view-database-local.png[]
+
+
+You could also use other https://sqlitebrowser.org/[database clients]
+
+
+== Fix the Back-Arrow
+
+.MainActivity.kt
+[source,kotlin,linenums,highlight=17..20]
+----
+package at.htl.roomapp
+
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import androidx.navigation.findNavController
+import androidx.navigation.ui.setupActionBarWithNavController
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        setupActionBarWithNavController(findNavController(R.id.fragment))
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = findNavController(R.id.fragment)
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+}
 ----
 
+== Implement the ListFragment (READ from Database)
 
+* ROOM Database #3 Video
 
+=== Create Row Item Layout for ListFragment
 
+* Right click res/layout
+* menu:New[Layout Resource File]
+* File name: `custom_row`
+* Root element: `androidx.constraintlayout.widget.ConstraintLayout`
 
+* To the ConstraintLayout-Element
+** add `android:padding="24dp"`
+** change to `android:layout_height="wrap_content"`
 
-
-
-[source,javascript]
+[source,xml]
 ----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/id_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:textSize="40dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/firstName_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="80dp"
+        android:text="John"
+        android:textSize="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/id_txt"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/lastName_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:text="Doe"
+        android:textSize="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/firstName_txt"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/age_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="(25)"
+        android:textSize="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/lastName_txt"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
 ----
 
 
+=== Create ListAdapter
 
+* Create class `fragments/list/ListAdapter.kt`
 
+* derivate from `RecyclerView.Adapter<ListAdapter.MyViewHolder>`
+* and create MyViewHolder-class
 
+[source,kotlin]
+----
+class ListAdapter:RecyclerView.Adapter<ListAdapter.MyViewHolder> {
 
+    class MyViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
 
+    }
 
-[source,javascript]
+}
 ----
 
+* and implement the member methods
+
+image:room-024-listadapter-implement-members.png[]
+image:room-025-listadapter-implement-members.png[]
+
+* add userList
+
+[source,kotlin]
+----
+package at.htl.roomapp.fragments.list
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import at.htl.roomapp.R
+import at.htl.roomapp.data.User
+import kotlinx.android.synthetic.main.custom_row.view.*
+
+class ListAdapter:RecyclerView.Adapter<ListAdapter.MyViewHolder>() {
+
+    private var userList = emptyList<User>()
+
+    class MyViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+        return MyViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.custom_row,parent,false))
+    }
+
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        val currentItem = userList[position]
+        holder.itemView.id_txt.text = currentItem.id.toString()
+        holder.itemView.firstName_txt.text = currentItem.firstName
+        holder.itemView.lastName_txt.text = currentItem.lastName
+        holder.itemView.age_txt.text = currentItem.age.toString()
+    }
+
+    override fun getItemCount(): Int {
+        return userList.size
+    }
+
+    fun setData(users: List<User>) {
+        this.userList = users
+        notifyDataSetChanged()
+    }
+}
 ----
 
+.remove private scope
+[source,kotlin,linenums,highlight=6]
+----
+package at.htl.roomapp.data
 
+import ...
 
+class UserViewModel(application: Application) : AndroidViewModel(application) {
+    val readAllData: LiveData<List<User>>
+    private val repository: UserRepository
 
-
-
-
-[source,javascript]
+    ...
+}
 ----
 
+=== Add RecyclerView and UserViewModel to ListFragment
+
+[source,kotlin,linenums,highlight=27-37]
+----
+package at.htl.roomapp.fragments.list
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import at.htl.roomapp.R
+import at.htl.roomapp.data.UserViewModel
+import kotlinx.android.synthetic.main.fragment_list.view.*
+
+class ListFragment : Fragment() {
+
+    private lateinit var mUserViewModel: UserViewModel
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_list, container, false)
+
+        // RecyclerView
+        val adapter = ListAdapter()
+        val recyclerView = view.recyclerview
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        // UserViewModel
+        mUserViewModel = ViewModelProvider(this).get(UserViewModel::class.java)
+        mUserViewModel.readAllData.observe(viewLifecycleOwner, Observer { user ->
+            adapter.setData(user) // <.>
+        })
+
+
+        view.floatingActionButton.setOnClickListener {
+            findNavController().navigate(R.id.action_listFragment_to_addFragment)
+        }
+
+        return view
+    }
+}
 ----
 
+<.> setData notifies the observers
 
 
+.Now it works
+[.clearfix]
+--
+image:room-026-emulator.png[width=40%]
+image:room-027-emulator.png[width=40%]
+--
+
+== UPDATE the Database
+
+* ROOM Database #4 Video
+
+=== Reorganize the Packages
+
+* create a package `model`
+* move `User.kt` into this package
+* create a package `viewmodel`
+* move `UserViewModel.kt` into this package
+* create a package `repository`
+* move `UserRepository.kt` into this package
 
 
+=== Create a new Fragment UpdateFragment
+
+* create a new package `update`
+
+* insert a new fragment
+** right click on package `update`
+** menu:New[Fragment>Fragment (Blank)]
+** Fragment Name: `UpdateFragment`
+** kbd:[Finish]
+
+.remove all codes except `onCreateView`
+----
+ package at.htl.roomapp.fragments.update
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import at.htl.roomapp.R
 
 
+class UpdateFragment : Fragment() {
 
-[source,javascript]
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_update, container, false)
+    }
+
+}
 ----
 
+* change the layout from fragment_update.xml to ConstraintLayout
+* Copy the view-elements from fragment_add.xml to fragment_update.xml
+* Rename the elements from add... to uUpdate...
+* Change the text of the button to "Update"
+
+.fragment_update.xml
+[%collapsible%close]
+====
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.update.UpdateFragment"
+    android:padding="24dp">
+
+    <EditText
+        android:id="@+id/updateFirstName_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:ems="10"
+        android:hint="First Name"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <EditText
+        android:id="@+id/updateLastName_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:hint="Last Name"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/updateFirstName_et" />
+
+    <EditText
+        android:id="@+id/updateAge_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:hint="Age"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/updateLastName_et" />
+
+    <Button
+        android:id="@+id/update_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Update"
+        app:layout_constraintTop_toBottomOf="@+id/updateAge_et"
+        tools:layout_editor_absoluteX="147dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+----
+====
+
+=== Add the Fragment to the Navigation
+
+* open `my_nav.xml`
+* add "New Destination" `fragment_update`
+* add connections
+
+image:room-028-add-destination.png[]
+
+* change the label of the updateFragment to "Update" in my_nav.xml
+
+=== Add a Parameter for invoking UpdateFragment
+
+==== Derivate the Entity Class from Parcelable
+
+[source,kotlin,linenums,highlight=8;16]
+----
+package at.htl.roomapp.model
+
+import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import kotlinx.android.parcel.Parcelize
+
+@Parcelize // <.>
+@Entity(tableName = "user_table")
+data class User(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
+    val firstName: String,
+    val lastName: String,
+    val age: Int
+): Parcelable // <.>
 ----
 
+<.> add @Parcelize and
+<.> extends Parcelable
 
+* So you can create a package with an User-object
 
+==== Add the Parameters to the Navigation-Destination
 
+* Click on updateFragment in my_nav.xml
+* Click on kbd:[+] next to Arguments
+* Name: `currentUser`
+* Choose Type: `Custom Parcelable ...`
+* Select Class: `User (at.htl.roomapp.model)`
 
+image:room-029-add-parameter-to-destination.png[]
 
+* kbd:[Add]
 
-[source,javascript]
+==== Add Id to ConstraintLayout of custom_row.xml
+
+.custom_row.xml
+[source,xml,linenums,highlight=9]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp"
+    android:id="@+id/rowLayout">
+...
+</androidx.constraintlayout.widget.ConstraintLayout>
 ----
 
+==== Add onClickListener to ListAdapter
+
+* When you click on a row, the click-Lsitener is invoked
+
+[source,kotlin,linenums,highlight=13-16]
+----
+class ListAdapter:RecyclerView.Adapter<ListAdapter.MyViewHolder>() {
+
+    ...
+
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        val currentItem = userList[position]
+        holder.itemView.id_txt.text = currentItem.id.toString()
+        holder.itemView.firstName_txt.text = currentItem.firstName
+        holder.itemView.lastName_txt.text = currentItem.lastName
+        holder.itemView.age_txt.text = currentItem.age.toString()
+
+        holder.itemView.rowLayout.setOnClickListener {
+            val action = ListFragmentDirections.actionListFragmentToUpdateFragment(currentItem) // <.>
+            holder.itemView.findNavController().navigate(action) // <.>
+        }
+    }
+    ...
+}
 ----
 
+<.> This is the connection in the navigation.
+ListFragmentDirection is auto-generated.
+So you have to rebuild the project, to get access to the actionListFragmentToUpdateFragment-function
+-> menu:Build[Rebuild Project]
+
+<.> opens the update-fragment after clicing on the row
+
+==== Fill the Update-Fragment with Data
+
+[source,kotlin,linenums,highlight=15;22-28]
+----
+ package at.htl.roomapp.fragments.update
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.navigation.fragment.navArgs
+import at.htl.roomapp.R
+import kotlinx.android.synthetic.main.fragment_add.view.*
 
 
+ class UpdateFragment : Fragment() {
 
+    private val args by navArgs<UpdateFragmentArgs>()
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_update, container, false)
 
+        view.updateFirstName_et.setText(args.currentUser.firstName)
+        view.updateLastName_et.setText(args.currentUser.lastName)
+        view.updateAge_et.setText(args.currentUser.age.toString())
 
+        return view
+    }
 
-[source,javascript]
+}
 ----
 
+[.clearfix]
+--
+image:room-030-emulator.png[width=40%]
+image:room-031-emulator.png[width=40%]
+--
+
+==== Persist Updated Data
+
+.Add update-function to UserDao
+[source,kotlin,linenums,highlight=13-14]
+----
+package at.htl.roomapp.data
+
+import androidx.lifecycle.LiveData
+import androidx.room.*
+import at.htl.roomapp.model.User
+
+@Dao
+interface UserDao {
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addUser(user: User)
+
+    @Update
+    suspend fun updateUser(user: User)
+
+    @Query("SELECT * FROM user_table ORDER BY id ASC")
+    fun readAllData(): LiveData<List<User>>
+
+}
 ----
 
+.Add update-function to UserRepository
+[source,kotlin,linenums,highlight=14-16]
+----
+package at.htl.roomapp.repository
 
+import androidx.lifecycle.LiveData
+import at.htl.roomapp.data.UserDao
+import at.htl.roomapp.model.User
 
+class UserRepository(private val userDao: UserDao) {
+    val readAlldata:  LiveData<List<User>> = userDao.readAllData()
 
+    suspend fun addUser(user: User) {
+        userDao.addUser(user)
+    }
 
-
-
-[source,javascript]
+    suspend fun updateUser(user: User) {
+        userDao.updateUser(user)
+    }
+}
 ----
 
+.Add update-function to UserViewModel
+[source,kotlin,linenums,highlight=29-33]
+----
+package at.htl.roomapp.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
+import at.htl.roomapp.data.UserDatabase
+import at.htl.roomapp.model.User
+import at.htl.roomapp.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+class UserViewModel(application: Application) : AndroidViewModel(application) {
+    val readAllData: LiveData<List<User>>
+    private val repository: UserRepository
+
+    init {
+        val userDao = UserDatabase.getDatabase(application).userDao()
+        repository = UserRepository(userDao)
+        readAllData = repository.readAlldata
+    }
+
+    fun addUser(user: User) {
+        viewModelScope.launch(Dispatchers.IO){
+            repository.addUser(user)
+        }
+    }
+
+    fun updateUser(user: User) {
+        viewModelScope.launch(Dispatchers.IO) {  // <.>
+            repository.updateUser(user)
+        }
+    }
+}
 ----
 
+<.> Dispatchers.IO means, the update is running asynchronous
+
+.UpdateFragment.kt
+[source,kotlin,linenums,highlight=25;34-44;47-67]
+----
+package at.htl.roomapp.fragments.update
+
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextUtils
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import at.htl.roomapp.R
+import at.htl.roomapp.model.User
+import at.htl.roomapp.viewmodel.UserViewModel
+import kotlinx.android.synthetic.main.fragment_update.*
+import kotlinx.android.synthetic.main.fragment_update.view.*
 
 
+class UpdateFragment : Fragment() {
 
+    private val args by navArgs<UpdateFragmentArgs>()
 
+    private lateinit var mUserViewModel: UserViewModel
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_update, container, false)
 
+        mUserViewModel = ViewModelProvider(this).get(UserViewModel::class.java)
 
-[source,javascript]
+        view.updateFirstName_et.setText(args.currentUser.firstName)
+        view.updateLastName_et.setText(args.currentUser.lastName)
+        view.updateAge_et.setText(args.currentUser.age.toString())
+
+        view.update_btn.setOnClickListener {
+            updateItem()
+        }
+
+        return view
+    }
+
+    private fun updateItem() {
+        val firstName = updateFirstName_et.text.toString()
+        val lastName = updateLastName_et.text.toString()
+        val age = Integer.parseInt(updateAge_et.text.toString())
+
+        if (inputCheck(firstName, lastName, updateAge_et.text)) {
+            // Create User Object
+            val updatedUser = User(args.currentUser.id, firstName,lastName, age)
+            // Update Current User
+            mUserViewModel.updateUser(updatedUser)
+            Toast.makeText(requireContext(),"Updated Successfully!", Toast.LENGTH_SHORT).show()
+            // Navigate Back
+            findNavController().navigate(R.id.action_updateFragment_to_listFragment)
+        } else {
+            Toast.makeText(requireContext(),"Please fill out all fields.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun inputCheck(firstName: String, lastName: String, age: Editable): Boolean {
+        return !(TextUtils.isEmpty(firstName) && TextUtils.isEmpty(lastName) && age.isEmpty())
+    }
+}
 ----
 
-----
+[.clearfix]
+--
+image:room-032-emulator.png[width=40%]
+image:room-033-emulator.png[width=40%]
+--
+image:room-034-emulator.png[width=40%]
 
+== DELETE from Database
 
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
+* ROOM Database #5 Video
 
 
 
@@ -951,43 +1419,7 @@ image:room-015-emulator.png[width=40%]
 
 
 
-[source,javascript]
-----
-
-----
 
 
 
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,javascript]
-----
-
-----
-
-
-
-
-
-
-
-
-[source,shell]
-----
-
-----
 
