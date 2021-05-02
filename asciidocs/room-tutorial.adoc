@@ -20,8 +20,8 @@ ifdef::backend-html5[]
 
 // https://fontawesome.com/v4.7.0/icons/
 icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/android-classroom-course/main/asciidocs/{docname}.adoc] ‏ ‏ ‎
-icon:github-square[link=https://github.com/htl-leonding-college/angular-lecture-notes] ‏ ‏ ‎
-icon:home[link=https://htl-leonding-college.github.io/angular-lecture-notes]
+icon:github-square[link=https://github.com/htl-leonding-college/android-classroom-course] ‏ ‏ ‎
+icon:home[link=https://htl-leonding-college.github.io/android-classroom-course/room-tutorial.html]
 endif::backend-html5[]
 
 // print the toc here (not at the default position)
