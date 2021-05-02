@@ -1,0 +1,616 @@
+= Android / Kotlin Lecture Notes
+:author: Thomas W. Stütz
+:revnumber: 1.0.0
+:revdate: 2020-07-26
+:revremark: NVS 4th grade HTL Leonding Vocational College
+:encoding: utf-8
+:experimental:
+ifndef::imagesdir[:imagesdir: images]
+//:toc-placement!:  // prevents the generation of the doc at this position, so it can be printed afterwards
+:source-highlighter: rouge
+:sourcedir: ../src/main/java
+:icons: font
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:toc: left
+:toclevels: 5  // this instructions MUST set after :toc:
+:linkattr:  // to be sure to process ", window="_blank""
+
+//Need this blank line after ifdef, don't know why...
+ifdef::backend-html5[]
+
+// https://fontawesome.com/v4.7.0/icons/
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/angular-lecture-notes/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:github-square[link=https://github.com/htl-leonding-college/angular-lecture-notes] ‏ ‏ ‎
+icon:home[link=https://htl-leonding-college.github.io/angular-lecture-notes]
+endif::backend-html5[]
+
+// print the toc here (not at the default position)
+//toc::[]
+
+
+* Kotlin hat zwei Hauptresourcen
+** von Jetbrains: https://kotlinlang.org/
+** von Google: https://developer.android.com/kotlin
+
+- https://developer.android.com/courses/[Google Courses,window="_blank"]
+- https://developer.android.com/kotlin/first[developer.android.com/kotlin/first - Überblick über Kurse,window="_blank"]
+- https://developer.android.com/courses/android-basics-kotlin/android-basics-kotlin-vocab[Vocabulary for Android Basics in Kotlin,window="_blank"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== Android Basics in Kotlin - Unit 1
+
+TIP: After evey unit commit into repo: https://classroom.github.com/a/wvubSkiA
+
+IMPORTANT: each commit has to include your last name - ie Mueller - unit 1 / 1 Introduction to Kotlin
+
+IMPORTANT: For every android-project use an own branch
+
+
+image:badge01.png[]
+
+* Kurs: Androiud Basics in Kotlin: https://developer.android.com/courses/android-basics-kotlin/course
+* Make this introduction course provided by Google: https://developer.android.com/courses/pathways/android-basics-kotlin-one[Android Basics: Introduction to Kotlin,window="_blank"]
+** Use the https://developer.android.com/training/kotlinplayground[Kotlin Playground,window="_blank"]
+
+=== Happy Birthday - App
+
+* https://developer.android.com/codelabs/basic-android-kotlin-training-birthday-card-app?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-basics-kotlin-three%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-training-birthday-card-app#1[Views / ViewGroup / TextView,window="_blank"] see also
+https://developer.android.com/studio/write/layout-editor[Developer Reference Guide,window="_blank"]
+* ConstraintLayout
+* measures for distances on the screen
+** dp ... density independent pixels -> for layout
+** sp ... scalabale pixels -> for text-size
+** By default, sp is the same size as dp, but it resizes based on the user's preferred text size.
+** https://developer.android.com/training/multiscreen/screendensities[dp vs sp,window="_blank"]
+* A constraint in the context of the Layout Editor represents a connection or alignment of a view to another view, the parent layout, or an invisible guideline.
+** For example, a view can be constrained to be a certain distance from the edge of its container, or always be to the right of another view, or always the top view inside a container.
+
+[source,kotlin]
+----
+fun main() {
+    val diceRange = 1..6
+    val randomNumber = diceRange.random()
+    println("Random number: $randomNumber")
+}
+----
+
+* data type `IntRange`
+** Ranges can be between any integers. The following are valid ranges: 3..46, 0..270, -6..+6, -10..-4.
+** You can call functions directly on a range, for example: (1..6).random().
+
+
+=== Dice Roller App
+
+* https://developer.android.com/courses/pathways/android-basics-kotlin-four
+
+.The digit '1' is only visible in the Design Editor and therefore there are no string resources used
+image:text-only-in-design-editor.png[]
+
+.https://developer.android.com/codelabs/basic-android-kotlin-training-create-dice-roller-app-with-button?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-basics-kotlin-four%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-training-create-dice-roller-app-with-button#3[Examples for activities,window="_blank"]
+image:dice-roller-activity.png[]
+
+
+* Every Kotlin program must have a `main()` function.
+Android apps operate differently.
+Instead of calling a main() function, the Android system calls the `onCreate()` method of your `MainActivity` when your app is opened for the first time.
+
+.Enable auto imports
+image:auto-import.png[]
+
+* Implement Button-OnClickListener
+* Use Toast
+* Update TextView
+
+IMPORTANT: In diesem Kurs sieht man gut, dass kleine Schritte wichtig sind:
+
+. Zuerst wird der TextView nur eine fixe Zahl (6) zugewiesen
+. Erst im nächsten Schritt wird dieses Zahl per Zufall ermittelt.
+
+
+* Erstellen einer Klasse (ohne ein eigenes File zu erstellen)
+
+* Android Style Guide (https://developer.android.com/kotlin/style-guide[Kotlin Style Guide, window="_blank"])
+** Condense your code
+** Reformat your code
+** Comment your Code (_why_ not _what_)
+
+
+== Android Basics in Kotlin - Unit 12 Layouts
+
+* https://g.co/android/basics
+
+=== Tip Time App
+
+* Class hierarchy
+
+
+image:xml-element.png[]
+
+* Constraint Layout:
+** `androidx.constraintlayout.widget.ConstraintLayout` instead of just `ConstraintLayout` like the `TextView`.
+** This is because ConstraintLayout is part of Android Jetpack, which contains libraries of code which offers additional functionality on top of the core Android platform.
+** Jetpack has useful functionality you can take advantage of to make building apps easier.
+** You'll recognize this UI component is part of Jetpack because it starts with "androidx".
+
+* Attributes
+** layout_height
+** layout_width
+
+
+* Views
+** RadioGroup / RadioButton
+** Switch
+
+
+* https://developer.android.com/topic/libraries/view-binding[ViewBinding, window="_blank"]
+** it is an alternative to `findViewById()`
++
+image:findViewById-vs-ViewBinding.png[]
+
+
+* Debugger -> Exception
+
+==== Color
+
+image:color.png[]
+
+* Note that a color can also be defined including an alpha value #00-#FF, which represents the transparency
+** #00 = 0% = fully transparent
+** #FF = 100% = fully opaque
+* When included, the alpha value is the first of 4 hexadecimal numbers (ARGB).
+* If an alpha value is not included, it is assumed to be #FF = 100% opaque.
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,shell]
+----
+
+----
+

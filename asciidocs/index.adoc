@@ -1,0 +1,600 @@
+= Android / Kotlin Lecture Notes
+:author: Thomas W. Stütz
+:revnumber: 1.0.0
+:revdate: 2020-07-26
+:revremark: NVS 4th grade HTL Leonding Vocational College
+:encoding: utf-8
+:experimental:
+ifndef::imagesdir[:imagesdir: images]
+//:toc-placement!:  // prevents the generation of the doc at this position, so it can be printed afterwards
+:source-highlighter: rouge
+:sourcedir: ../src/main/java
+:icons: font
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:toc: left
+:toclevels: 5  // this instructions MUST set after :toc:
+:linkattr:  // to be sure to process ", window="_blank""
+
+//Need this blank line after ifdef, don't know why...
+ifdef::backend-html5[]
+
+// https://fontawesome.com/v4.7.0/icons/
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/angular-lecture-notes/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:github-square[link=https://github.com/htl-leonding-college/angular-lecture-notes] ‏ ‏ ‎
+icon:home[link=https://htl-leonding-college.github.io/angular-lecture-notes]
+endif::backend-html5[]
+
+// print the toc here (not at the default position)
+//toc::[]
+
+
+* Kotlin hat zwei Hauptresourcen
+** von Jetbrains: https://kotlinlang.org/
+** von Google: https://developer.android.com/kotlin
+
+- https://developer.android.com/courses/[Google Courses,window="_blank"]
+- https://developer.android.com/kotlin/first[developer.android.com/kotlin/first - Überblick über Kurse, window="_blank"]
+- https://developer.android.com/courses/android-basics-kotlin/android-basics-kotlin-vocab[Vocabulary for Android Basics in Kotlin, window="_blank"]
+
+* Es gibt noch einen sogenannten Classroom Course:
+
+** https://developer.android.com/courses/android-development-with-kotlin/course?utm_source=dac&utm_medium=website&utm_campaign=edu[Android Development with Kotlin: Classroom course, window="_blank"]
+** mit dazugehörigen https://developer.android.com/teach#for-instructors-teaching-a-course[Foliensatz, window="_blank"]
+
+
+== Kotlin Basics
+
+Kotlin does not allow implicit type conversions.
+So you can't assign a short value directly to a long variable, or an Int to a Long.
+This is because implicit number conversion is a common source of errors in programs.
+You can always assign values of different types by casting.
+
+
+== Use RecyclerView to display a scrollable list
+
+image:recyclerview-overview.png[]
+
+
+* *item* - One data item of the list to display. Represents one Affirmation object in your app.
+* *Adapter* - Takes data and prepares it for RecyclerView to display.
+* *ViewHolders* - A pool of views for RecyclerView to use and reuse to display affirmations.
+* *RecyclerView* - Views on screen
+
+
+=== Packages
+
+https://developer.android.com/codelabs/basic-android-kotlin-training-recyclerview-scrollable-list?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-development-with-kotlin-5%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-training-recyclerview-scrollable-list#2[Setting up the list of data]
+
+* There are two ways in which you can make use of packages.
+
+** Create different packages for different parts of your code.
+For example, developers will often separate the classes that work with data and the classes that build the UI into different packages.
+** Use code from other packages in your code.
+In order to use the classes from other packages, you need to define them in your build system's dependencies.
++
+It's also a standard practice to import them in your code so you can use their shortened names (eg, TextView) instead of their fully-qualified names (eg, android.widget.TextView). For example, you have already used import statements for classes such as sqrt (import kotlin.math.sqrt) and View (import android.view.View).
+
+=== Datasource
+
+* Create a class to be a data source
+
+** Data displayed in your app may come from different sources (e.g. within your app project or from an external source that requires connecting to the internet to download data).
++
+As a result, data may not be in the exact format that you need.
+The rest of the app should not concern itself with where the data originates from or in what format it is originally.
+You can and should hide away this data preparation in a separate Datasource class that prepares the data for the app.
+
+=== RecyclerView
+
+https://developer.android.com/codelabs/basic-android-kotlin-training-recyclerview-scrollable-list?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-development-with-kotlin-5%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-training-recyclerview-scrollable-list#3[Adding a RecyclerView too your app]
+
+RecyclerView supports displaying items in different ways, such as a linear list or a grid.
+Arranging the items is handled by a LayoutManager.
+The Android framework provides layout managers for basic item layouts.
+The Affirmations app displays items as a vertical list, so you can use the LinearLayoutManager.
+
+=== Adapter
+
+* Adapter is a design pattern that adapts the data into something that can be used by RecyclerView.
++
+In this case, you need an adapter that takes an Affirmation instance from the list returned by loadAffirmations(), and turns it into a list item view, so that it can be displayed in the RecyclerView.
++
+When you run the app, RecyclerView uses the adapter to figure out how to display your data on screen.
++
+RecyclerView asks the adapter to create a new list item view for the first data item in your list.
++
+Once it has the view, it asks the adapter to provide the data to draw the item.
+This process repeats until the RecyclerView doesn't need any more views to fill the screen.
+If only 3 list item views fit on the screen at once, the RecyclerView only asks the adapter to prepare those 3 list item views (instead of all 10 list item views).
+
+=== ViewHolder
+
+
+
+* RecyclerView doesn't interact directly with item views, but deals with ViewHolders instead.
+
+* A ViewHolder represents a single list item view in RecyclerView, and can be reused when possible.
+
+* A ViewHolder instance holds references to the individual views within a list item layout (hence the name "view holder"). This makes it easier to update the list item view with new data.
+View holders also add information that RecyclerView uses to efficiently move views around the screen.
+
+[source,kotlin]
+----
+class ItemAdapter(private val context: Context, private val dataset: List<Affirmation>) {
+
+    class ItemViewHolder()
+}
+----
+
+* Defining a class inside another class is called creating a nested class.
+* Since ItemViewHolder is only used by ItemAdapter, creating it inside ItemAdapter shows this relationship. This is not mandatory, but it helps other developers understand the structure of your program.
+
+[TIP]
+====
+* when "unresolved reference" zB bei RecyclerView oder Context -> kbd:[Invalidate Caches/Restart]
+* search for a library w/ the IDE
++
+image:import-library-with-ide.png[]
+====
+
+
+image:affirmations-recylerview.png[width=60%]
+
+
+=== Lernzielkontolle
+
+* Klasse Datasource und eine Entity Klasse
+
+* Erstellen sie eine Kotlin Liste mit folgenden Einträgen
+** ...
+
+* Stellen sie die Anzahl der Einträge in der vorhandenen TextView dar.
+
+image:lzk01-001-display-list-size.png[width=60%]
+
+
+== Fragments
+
+A Fragment represents a behavior or a portion of user interface (UI) in an Activity. You can combine multiple fragments in a single activity to build a multi-pane UI, and you can reuse a Fragment in multiple activities.
+
+* Think of a Fragment as a modular section of an activity, something like a "sub-activity" that you can also use in other activities:
+
+** Fragment has its own lifecycle and receives its own input events.
+** You can add or remove a Fragment while the activity is running.
+** Fragment is defined in a Kotlin class.
+** Fragment's UI is defined in an XML layout file.
+
+* DataBindingUtil: Utility class to create ViewDataBinding from layouts.
+
+* Summary
+
+** A Fragment is a modular section of an activity.
+** A Fragment has its own lifecycle and receives its own input events.
+** Use the <fragment> tag to define the layout for the Fragment in the XML layout file.
+** Inflate the layout for a Fragment in onCreateView().
+** You can add or remove a Fragment while the activity is running.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,shell]
+----
+
+----
+

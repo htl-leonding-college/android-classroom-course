@@ -1,0 +1,976 @@
+= Android / Room Tutorial
+:author: Thomas W. Stütz
+:revnumber: 1.0.0
+:revdate: 2021-05-01
+:revremark: NVS 4th grade HTL Leonding Vocational College
+:encoding: utf-8
+:experimental:
+ifndef::imagesdir[:imagesdir: images]
+//:toc-placement!:  // prevents the generation of the doc at this position, so it can be printed afterwards
+:source-highlighter: rouge
+:sourcedir: ../src/main/java
+:icons: font
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:toc: left
+:toclevels: 5  // this instructions MUST set after :toc:
+:linkattr:  // to be sure to process ", window="_blank""
+
+//Need this blank line after ifdef, don't know why...
+ifdef::backend-html5[]
+
+// https://fontawesome.com/v4.7.0/icons/
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/angular-lecture-notes/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:github-square[link=https://github.com/htl-leonding-college/angular-lecture-notes] ‏ ‏ ‎
+icon:home[link=https://htl-leonding-college.github.io/angular-lecture-notes]
+endif::backend-html5[]
+
+// print the toc here (not at the default position)
+//toc::[]
+
+
+* Source:
+** https://www.youtube.com/watch?v=lwAvI3WDXBY&t=601s[ROOM Database - #1 Create Database Schema | Android Studio Tutorial, window="_blank"]
+** https://www.youtube.com/watch?v=UBCAWfztTrQ[ROOM Database - #2 Insert Data | Android Studio Tutorial window ="_blank"]
+
+== Create Database
+
+.Create Project
+[%collapsible%]
+====
+image:room-000-create-project.png[]
+
+image:room-001-create-project.png[]
+
+.plugins in build.gradle (:app)
+[source,groovy]
+----
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-android-extensions'
+    id 'kotlin-kapt'
+    id 'androidx.navigation.safeargs.kotlin'
+}
+----
+
+.add dependencies in build.gradle (:app)
+[source,groovy]
+----
+    // Material Design
+    implementation 'com.google.android.material:material:1.3.0'
+
+    // Navigation Component
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.5'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
+
+    // Room components
+    implementation "androidx.room:room-runtime:2.3.0"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    kapt "androidx.room:room-compiler:2.3.0"
+    implementation "androidx.room:room-ktx:2.3.0"
+    androidTestImplementation "androidx.room:room-testing:2.3.0"
+
+    // Lifecycle components
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    implementation "androidx.lifecycle:lifecycle-common-java8:2.3.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
+
+    // Kotlin components
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2"
+
+    // DataBinding
+    kapt "com.android.databinding:compiler:3.2.0"
+----
+
+.add classpath for safe-args-gradle-plugin in build-gradle (RoomApp)
+[source,groovy]
+----
+    dependencies {
+        ...
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.5"
+
+    }
+
+----
+
+* remove the 'kotlin-android-extensions' from plugin-section in build.gradle (:app)
+
+====
+
+=== Create the entity class
+
+* create a package `data`
+* create a Kotlin class `User`
+
+[source,kotlin]
+----
+package at.htl.roomapp.data
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "user_table")
+data class User(
+        @PrimaryKey(autoGenerate = true)
+        val id: Int,
+        val firstName: String,
+        val lastName: String,
+        val age: Int
+)
+----
+
+=== Create the Dao
+
+* Create a interface
+
+[source,kotlin]
+----
+package at.htl.roomapp.data
+
+import androidx.lifecycle.LiveData
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+
+@Dao
+interface UserDao {
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addUser(user: User)
+
+    @Query("SELECT * FROM user_table ORDER BY id ASC")
+    fun readAllData(): LiveData<List<User>>
+
+}
+----
+
+=== Create the database
+
+[source,kotlin]
+----
+package at.htl.roomapp.data
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+
+@Database(entities = [User::class], version = 1, exportSchema = false)
+abstract class UserDatabase: RoomDatabase() {
+
+    abstract fun userDao(): UserDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE:UserDatabase? = null
+
+        fun getDatabase(context: Context):UserDatabase{
+            val tempInstance = INSTANCE
+            if (tempInstance != null) {
+                return tempInstance
+            }
+            synchronized(this) {
+                val instance = Room.databaseBuilder(
+                        context.applicationContext,
+                        UserDatabase::class.java,
+                        "user_database"
+                ).build()
+                INSTANCE = instance
+                return instance
+            }
+        }
+    }
+}
+----
+
+=== Create a Repository
+
+[source,kotlin]
+----
+package at.htl.roomapp.data
+
+import androidx.lifecycle.LiveData
+
+class UserRepository(private val userDao: UserDao) {
+    val readAlldata:  LiveData<List<User>> = userDao.readAllData()
+
+    suspend fun addUser(user: User) {
+        userDao.addUser(user)
+    }
+}
+----
+
+=== Create ViewModel
+
+The ViewModel's role is to provide data to the UI and survive configuration changes.
+A ViewModel acts as a communication center between the Repository and the UI.
+
+[source,kotlin]
+----
+package at.htl.roomapp.data
+
+import android.app.Application
+import androidx.annotation.NonNull
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+class UserViewModel(application: Application) : AndroidViewModel(application) { // <.>
+    private val readAllData: LiveData<List<User>>
+    private val repository: UserRepository
+
+    init {
+        val userDao = UserDatabase.getDatabase(application).userDao()
+        repository = UserRepository(userDao)
+        readAllData = repository.readAlldata
+    }
+
+    fun addUser(user: User) {
+        viewModelScope.launch(Dispatchers.IO){
+            repository.addUser(user)
+        }
+    }
+}
+----
+
+<.> A AndroidViewModel is a subclass of ViewModel and includes the *application context*.
+
+
+== Add Navigation
+
+* Open Resource Manager
+
+image:room-002-open-resource-manager.png[]
+
+* Choose *Navigation Resource File*
+
+** File name: my_nav
+** kbd:[ok]
+
+* kbd:[New Destination]
+** Create new destination
+** Choose *Fragment (Blank)*
+
+image:room-003-configure-fragment.png[]
+
+* Fragment Name: ListFragment
+* kbd:[Finish]
+
+* Create new Fragment in Navigation
+
+image:room-004-configure-add-fragment.png[]
+
+* Fragment Name: AddFragment
+* kbd:[Finish]
+
+* connect fragments
+
+image:room-005-connect-fragments.png[]
+
+* remove the codes in the fragment classes except function `onCreateView`
+
+.AddFragment.kt
+[source,kotlin]
+----
+package at.htl.roomapp
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+
+
+class AddFragment : Fragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_add, container, false)
+    }
+
+}
+----
+
+.ListFragment.kt
+[source,kotlin]
+----
+package at.htl.roomapp
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+
+class ListFragment : Fragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_list, container, false)
+    }
+}
+----
+
+* Add packages and move the fragments into them (refactoring)
+
+image:room-006-add-packages.png[]
+
+
+=== MainActivity
+
+* open activity_main.xml
+
+* remove TextView "Hello World"
+* add NavHostFragment from palette
+* choose *my_nav*
+
+* connect constraints
+
+image:room-007-connect-constraints.png[]
+
+
+== ListFragment
+
+* open fragment_list.xml
+* remove TextView
+
+* Change FrameLayout to ConstraintLayout
+
+.fragment_list.xml
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.list.ListFragment"/>
+----
+
+* add RecyclerView
+
+* connect constraints
+
+* add icon to resources folder
+
+image:room-008-add-vector-asset.png[]
+image:room-009-choose-add-icon.png[]
+
+* kbd:[Ok]
+
+* rename icon to: `ic_add`
+
+* kbd:[Next]
+* kbd:[Finsish]
+
+* Add FloatingActionButton from palette
+** Choose ic_add - icon
+** kbd:[Ok]
+
+* Connect constraints to right and bottom with 24dp
+
+* add to FloatingAction Button
+
+----
+android:focusable="true"
+android:tint="@android:color/white"
+----
+
+.fragment_list.xml and fragment_add.xml
+[%collapsible%]
+====
+
+.fragment_list.xml
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.list.ListFragment">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:tint="@android:color/white"
+        android:src="@drawable/ic_add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+----
+
+
+.fragment_add.xml
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.add.AddFragment"
+    android:padding="24dp">
+
+    <EditText
+        android:id="@+id/addFirstName_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:ems="10"
+        android:hint="First Name"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/addLastName_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:hint="Last Name"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/addFirstName_et" />
+
+    <EditText
+        android:id="@+id/editTextNumber"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:hint="Age"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/addLastName_et" />
+
+    <Button
+        android:id="@+id/add_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Add"
+        app:layout_constraintTop_toBottomOf="@+id/editTextNumber"
+        tools:layout_editor_absoluteX="147dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+----
+
+====
+
+.ListFragment.kt
+[source,kotlin]
+----
+package at.htl.roomapp.fragments.list
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
+import at.htl.roomapp.R
+import kotlinx.android.synthetic.main.fragment_list.view.*
+
+class ListFragment : Fragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_list, container, false)
+
+        view.floatingActionButton.setOnClickListener {
+            findNavController().navigate(R.id.action_listFragment_to_addFragment)
+        }
+
+        return view
+    }
+}
+----
+
+[.clearfix]
+--
+image:room-010-emulator.png[width=40%]
+image:room-011-emulator.png[width=40%]
+--
+
+* Die Navigation funktioniert, allerdings ändert sich die ActionBar nicht
+
+[source,kotlin]
+----
+package at.htl.roomapp
+
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import androidx.navigation.findNavController
+import androidx.navigation.ui.setupActionBarWithNavController
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        setupActionBarWithNavController(findNavController(R.id.fragment)) // <.>
+    }
+}
+----
+
+<.> The fragment in activity_main.xml is called `fragment`
+
+.Now the action bar works
+[.clearfix]
+--
+image:room-012-emulator.png[width=40%]
+image:room-013-emulator.png[width=40%]
+--
+
+////
+ifdef::basebackend-html[++++]
+ifdef::basebackend-html[<div style="clear: both"></div>]
+ifdef::basebackend-html[++++]
+////
+
+.app/src/main/res/navigation/my_nav.xml
+[source,xml,linenums,highlight=13;22]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/my_nav"
+    app:startDestination="@id/listFragment">
+
+    <fragment
+        android:id="@+id/listFragment"
+        android:name="at.htl.roomapp.fragments.list.ListFragment"
+        android:label="List"
+        tools:layout="@layout/fragment_list" >
+        <action
+            android:id="@+id/action_listFragment_to_addFragment"
+            app:destination="@id/addFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addFragment"
+        android:name="at.htl.roomapp.fragments.add.AddFragment"
+        android:label="Add"
+        tools:layout="@layout/fragment_add" >
+        <action
+            android:id="@+id/action_addFragment_to_listFragment"
+            app:destination="@id/listFragment" />
+    </fragment>
+</navigation>
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,shell]
+----
+
+----
+
