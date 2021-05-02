@@ -1,4 +1,16 @@
-# android-kotlin-lecture-notes
+# android-classroom-course
+
+## gh-pages
+
+- https://htl-leonding.github.io/android-classroom-course/index.html
+- https://htl-leonding.github.io/android-classroom-course/room-tutorial.html
+
+
+
+
+
+
+## old stuff
 
 [Android Basics: Introduction to Kotlin](https://developer.android.com/courses/pathways/android-basics-kotlin-one)
 

@@ -19,7 +19,7 @@ ifndef::imagesdir[:imagesdir: images]
 ifdef::backend-html5[]
 
 // https://fontawesome.com/v4.7.0/icons/
-icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/angular-lecture-notes/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/android-classroom-course/main/asciidocs/{docname}.adoc] ‏ ‏ ‎
 icon:github-square[link=https://github.com/htl-leonding-college/angular-lecture-notes] ‏ ‏ ‎
 icon:home[link=https://htl-leonding-college.github.io/angular-lecture-notes]
 endif::backend-html5[]
@@ -30,7 +30,7 @@ endif::backend-html5[]
 
 * Source:
 ** https://www.youtube.com/watch?v=lwAvI3WDXBY&t=601s[ROOM Database - #1 Create Database Schema | Android Studio Tutorial, window="_blank"]
-** https://www.youtube.com/watch?v=UBCAWfztTrQ[ROOM Database - #2 Insert Data | Android Studio Tutorial window ="_blank"]
+** https://www.youtube.com/watch?v=UBCAWfztTrQ[ROOM Database - #2 Insert Data | Android Studio Tutorial, window ="_blank"]
 
 == Create Database
 
@@ -252,6 +252,8 @@ image:room-002-open-resource-manager.png[]
 ** File name: my_nav
 ** kbd:[ok]
 
+=== ListFragment
+
 * kbd:[New Destination]
 ** Create new destination
 ** Choose *Fragment (Blank)*
@@ -260,6 +262,8 @@ image:room-003-configure-fragment.png[]
 
 * Fragment Name: ListFragment
 * kbd:[Finish]
+
+=== AddFragment
 
 * Create new Fragment in Navigation
 
@@ -271,6 +275,8 @@ image:room-004-configure-add-fragment.png[]
 * connect fragments
 
 image:room-005-connect-fragments.png[]
+
+== Create Packages for ListFragment and AddFragment
 
 * remove the codes in the fragment classes except function `onCreateView`
 
@@ -327,7 +333,7 @@ class ListFragment : Fragment() {
 image:room-006-add-packages.png[]
 
 
-=== MainActivity
+== Add Navigation to MainActivity
 
 * open activity_main.xml
 
@@ -340,7 +346,7 @@ image:room-006-add-packages.png[]
 image:room-007-connect-constraints.png[]
 
 
-== ListFragment
+== ListFragment - Layout
 
 * open fragment_list.xml
 * remove TextView
@@ -361,6 +367,8 @@ image:room-007-connect-constraints.png[]
 * add RecyclerView
 
 * connect constraints
+
+=== Add FloatingActionButton
 
 * add icon to resources folder
 
@@ -529,6 +537,8 @@ image:room-011-emulator.png[width=40%]
 
 * Die Navigation funktioniert, allerdings ändert sich die ActionBar nicht
 
+=== Add NavController to ActionBar
+
 [source,kotlin]
 ----
 package at.htl.roomapp
@@ -564,7 +574,7 @@ ifdef::basebackend-html[++++]
 ////
 
 .app/src/main/res/navigation/my_nav.xml
-[source,xml,linenums,highlight=13;22]
+[source,xml,linenums,highlight=11;20]
 ----
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
@@ -594,7 +604,14 @@ ifdef::basebackend-html[++++]
 </navigation>
 ----
 
+.Now the fragment labels are fine
+[.clearfix]
+--
+image:room-014-emulator.png[width=40%]
+image:room-015-emulator.png[width=40%]
+--
 
+== Implement the ListFragment
 
 
 
