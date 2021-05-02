@@ -2,8 +2,8 @@
 
 ## gh-pages
 
-- https://htl-leonding.github.io/android-classroom-course/index.html
-- https://htl-leonding.github.io/android-classroom-course/room-tutorial.html
+- https://htl-leonding-college.github.io/android-classroom-course/index.html
+- https://htl-leonding-college.github.io/android-classroom-course/room-tutorial.html
 
 
 
