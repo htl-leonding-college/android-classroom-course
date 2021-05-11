@@ -38,6 +38,14 @@ endif::backend-html5[]
 * github-repo for project
 ** https://github.com/htl-leonding-example/android-room-app
 
+== Overview
+
+//.Source: https://developer.android.google.cn/codelabs/android-training-livedata-viewmodel/#0
+//image:room-035-overview.png[]
+
+.https://medium.com/hongbeomi-dev/create-android-app-with-mvvm-pattern-simply-using-android-architecture-component-529d983eaabe
+image:repository.png[]
+
 == Create Database
 
 .Create Project
@@ -100,8 +108,6 @@ plugins {
     }
 
 ----
-
-* remove the 'kotlin-android-extensions' from plugin-section in build.gradle (:app)
 
 ====
 
