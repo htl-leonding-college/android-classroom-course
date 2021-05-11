@@ -43,7 +43,7 @@ endif::backend-html5[]
 //.Source: https://developer.android.google.cn/codelabs/android-training-livedata-viewmodel/#0
 //image:room-035-overview.png[]
 
-.https://medium.com/hongbeomi-dev/create-android-app-with-mvvm-pattern-simply-using-android-architecture-component-529d983eaabe
+.Source: https://medium.com/hongbeomi-dev/create-android-app-with-mvvm-pattern-simply-using-android-architecture-component-529d983eaabe[Create Android app with MVVM pattern simply using Android Architecture Component, window="_blank"]
 image:repository.png[]
 
 == Create Database
