@@ -55,6 +55,9 @@ endif::backend-html5[]
 
 == Mealz App
 
+* use retrofit for consuming a REST- Api (w/ coroutines)
+
+<<mealz-app.adoc#_mealz_app, Mealz App>>
 
 
 
