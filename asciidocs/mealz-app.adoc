@@ -1,0 +1,694 @@
+= Android / Kotlin Lecture Notes
+:author: Thomas W. Stütz
+:revnumber: 1.0.0
+:revdate: {docdate}
+:revremark: NVS 4th and 5th grade HTL Leonding Vocational College
+:encoding: utf-8
+:experimental:
+ifndef::imagesdir[:imagesdir: images]
+//:toc-placement!:  // prevents the generation of the doc at this position, so it can be printed afterwards
+:source-highlighter: rouge
+:sourcedir: ../src/main/java
+:icons: font
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:toc: left
+:toclevels: 5  // this instructions MUST set after :toc:
+:linkattr:  // to be sure to process ", window="_blank""
+
+//Need this blank line after ifdef, don't know why...
+ifdef::backend-html5[]
+
+// https://fontawesome.com/v4.7.0/icons/
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/android-classroom-course/main/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:github-square[link=https://github.com/htl-leonding-college/android-classroom-course] ‏ ‏ ‎
+icon:home[link=https://htl-leonding-college.github.io/android-classroom-course]
+endif::backend-html5[]
+
+// print the toc here (not at the default position)
+//toc::[]
+
+
+== Mealz App
+
+=== Update Dependencies
+
+=== MVVM
+
+image::mealz/mvc.png[]
+
+image::mealz/mvp-mvvm.png[]
+
+image::mealz/mvvm.png[]
+
+image::mealz/aac-viewmodel.png[]
+
+
+=== Create ViewModel
+
+.build.gradle (Module)
+[source,groovy]
+----
+implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1'
+----
+
+[source,kotlin]
+----
+@Composable
+fun MealsCategoriesScreen() {
+    val viewModel : MealsCategoriesViewModel = viewModel() // <.>
+    Text(text = "Hello Tom!")
+}
+----
+
+<.> The viewModel will NOT reinstantiated by every compose cycle, it will live as long the screen (the composable, activity or fragment) will live.
+
+
+
+=== The MealsDB
+
+* https://www.themealdb.com/api.php
+* https://www.themealdb.com/api/json/v1/1/categories.php
+
+
+==== JSON
+
+image::mealz/json-response.png[]
+
+==== GSON deserialization
+
+* JSON -> data classes
+* we use gson
+* an valid alternative is https://github.com/square/moshi[moshi^]
+
+.build.gradle (Module)
+[source,groovy]
+----
+// Retrofit
+implementation 'com.google.code.gson:gson:2.10'
+----
+
+.MealResponse.kt
+[source,kotlin]
+----
+package at.htl.model.response
+
+import com.google.gson.annotations.SerializedName
+
+data class MealsCategoriesResponse(
+    val categories: List<MealResponse>
+) {
+}
+
+data class MealResponse(
+    @SerializedName("idCategory") val id: String,
+    @SerializedName("strCategory") val name: String,
+    @SerializedName("strCategoryDescription") val description: String,
+    @SerializedName("strCategoryThumb") val imageUrl: String
+)
+----
+
+.MealsRepository.kt
+[source,kotlin]
+----
+package at.htl.model
+
+import at.htl.model.response.MealsCategoriesResponse
+
+class MealsRepository {
+
+    fun getMeals(): MealsCategoriesResponse = MealsCategoriesResponse(arrayListOf())
+
+}
+----
+
+.MealsCategoriesViewModel.kt
+[source,kotlin]
+----
+package at.htl.mealzapp.ui.meals
+
+import androidx.lifecycle.ViewModel
+import at.htl.model.MealsRepository
+import at.htl.model.response.MealResponse
+
+class MealsCategoriesViewModel(
+    private val repository: MealsRepository = MealsRepository()
+) : ViewModel() {
+
+    fun getMeals(): List<MealResponse> {
+        return repository.getMeals().categories
+    }
+
+}
+----
+
+==== Retrofit
+
+* now we use retrofit to get the data from the rest api and furthermore to convert them into objects
+* https://square.github.io/retrofit/
+
+[source,groovy]
+----
+// Retrofit
+implementation 'com.google.code.gson:gson:2.10'
+implementation 'com.squareup.retrofit2.retrofit:2.9.0'
+implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+----
+
+.MealsWebService.kt
+[source,kotlin]
+----
+package at.htl.model.api
+
+import at.htl.model.response.MealsCategoriesResponse
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+
+class MealsWebService {
+
+    private lateinit var api: MealsApi
+
+    init {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://www.themealdb.com/api/json/v1/1/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        api = retrofit.create(MealsApi::class.java)
+    }
+
+
+    fun getMeals(): Call<MealsCategoriesResponse> {
+        return api.getMeals()
+    }
+
+    interface MealsApi {
+        @GET("categories.php")
+        fun getMeals(): Call<MealsCategoriesResponse>
+    }
+
+}
+----
+
+
+
+
+.MealsRepository.kt
+[source,kotlin]
+----
+package at.htl.model
+
+import at.htl.model.api.MealsWebService
+import at.htl.model.response.MealsCategoriesResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+class MealsRepository(
+    private val webService: MealsWebService = MealsWebService()
+) {
+    fun getMeals(
+        successCallback: (response: MealsCategoriesResponse?) -> Unit
+    ) {
+        return webService.getMeals().enqueue(object : Callback<MealsCategoriesResponse> {
+            override fun onResponse(
+                call: Call<MealsCategoriesResponse>,
+                response: Response<MealsCategoriesResponse>
+            ) {
+                if (response.isSuccessful)
+                    successCallback(response.body())
+            }
+
+            override fun onFailure(call: Call<MealsCategoriesResponse>, t: Throwable) {
+
+            }
+        })
+    }
+}
+----
+
+
+
+
+.MealsCategoriesViewModel.kt
+[source,kotlin]
+----
+package at.htl.mealzapp.ui.meals
+
+import androidx.lifecycle.ViewModel
+import at.htl.model.MealsRepository
+import at.htl.model.response.MealsCategoriesResponse
+
+class MealsCategoriesViewModel(
+    private val repository: MealsRepository = MealsRepository()
+) : ViewModel() {
+
+    fun getMeals(
+        successCallback: (response: MealsCategoriesResponse?) -> Unit
+    ) {
+        repository.getMeals() { response ->
+            successCallback(response)
+        }
+    }
+}
+----
+
+
+
+
+.MainActivity.kt
+[source,kotlin]
+----
+//...
+
+@Composable
+fun MealsCategoriesScreen() {
+    val viewModel: MealsCategoriesViewModel = viewModel()
+    val rememberedMeals: MutableState<List<MealResponse>> = remember {
+        mutableStateOf((emptyList<MealResponse>()))
+    }
+    viewModel.getMeals { response ->
+        val mealsFromTheApi = response?.categories
+        rememberedMeals.value = mealsFromTheApi.orEmpty()
+    }
+    LazyColumn {
+        items(rememberedMeals.value) { meal ->
+            Text(text = meal.name)
+        }
+
+    }
+}
+
+//...
+----
+
+
+.manifest.xml
+[source,xml]
+----
+<uses-permission android:name="android.permission.INTERNET" />
+----
+
+=== Coroutines
+
+image::mealz/coroutines1.png[]
+
+image::mealz/coroutines2.png[]
+
+image::mealz/coroutines3.png[]
+
+image::mealz/coroutines4.png[]
+
+
+
+
+
+
+[source,kotlin]
+----
+
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,javascript]
+----
+
+----
+
+
+
+
+
+
+
+
+[source,shell]
+----
+
+----
+
