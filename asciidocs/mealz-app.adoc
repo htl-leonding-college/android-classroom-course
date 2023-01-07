@@ -399,6 +399,105 @@ fun MealsCategoriesScreen() {
 <.> use LaunchedEffects, so the coroutine will be startet once and not at every composition
 
 
+=== Hoisting state and Coroutines
+
+* We don't want to trigger the request for the meals in the compose function. We will transfer it to the ViewModel.
+
+.MealsCategoriesViewModel.kt
+[source,kotlin]
+----
+class MealsCategoriesViewModel(
+    private val repository: MealsRepository = MealsRepository()
+) : ViewModel() {
+
+    private val mealsJob = Job()   // <.>
+    init {
+        val scope = CoroutineScope(mealsJob + Dispatchers.IO)
+        scope.launch() {  // <.>
+            val meals = getMeals()
+            mealsState.value = meals
+        }
+    }
+
+    val mealsState: MutableState<List<MealResponse>> = mutableStateOf((emptyList<MealResponse>()))
+
+    override fun onCleared() {
+        super.onCleared()
+        mealsJob.cancel()  // <.>
+    }
+
+    private suspend fun getMeals(): List<MealResponse> {
+        return repository.getMeals().categories
+    }
+}
+----
+
+<.> we create our own scope, even thats not necessary, because we could use the ViewModel-scope
+<.> we launch the scope once, when the ViewModel is created
+<.> we override a method, so the coroutine will be cancelled, when the ViewModel is destroyed.
+
+
+.MainActivity.kt
+[source,kotlin]
+----
+@Composable
+fun MealsCategoriesScreen() {
+    val viewModel: MealsCategoriesViewModel = viewModel()
+    val coroutineScope = rememberCoroutineScope()
+    val meals = viewModel.mealsState.value   // <.>
+
+    LazyColumn {
+        items(meals) { meal ->
+            Text(text = meal.name)
+        }
+    }
+}
+----
+
+<.> here we create the ViewModel
+
+=== Use the ViewModel-Scope
+
+
+.MealsCategoriesViewModel.kt
+[source,kotlin]
+----
+class MealsCategoriesViewModel(
+    private val repository: MealsRepository = MealsRepository()
+) : ViewModel() {
+
+    val TAG = MealsCategoriesViewModel::class.java.name
+
+    init {
+        Log.d(TAG, "we are about to launch a coroutine")
+        viewModelScope.launch(Dispatchers.IO) {  // <.>
+            Log.d(TAG, "we have launched the coroutine")
+            val meals = getMeals()
+            Log.d(TAG, "we have received the asynchronous data")
+            mealsState.value = meals
+        }
+        Log.d(TAG, "other work")
+    }
+
+    val mealsState: MutableState<List<MealResponse>> = mutableStateOf((emptyList<MealResponse>()))
+
+    // <.>
+
+    private suspend fun getMeals(): List<MealResponse> {
+        return repository.getMeals().categories
+    }
+}
+----
+
+<.> we only use `viewModelScope.launch(Dispatchers.IO) { ... }`
+
+<.> we do not to override `onCleared()` because it is already implemented with the ViewModel-scope
+
+
+image::mealz/coroutines5.png[]
+
+image::mealz/coroutines6-logcat.png[]
+
 
 [source,kotlin]
 ----
@@ -409,36 +508,11 @@ fun MealsCategoriesScreen() {
 
 
 
-[source,kotlin]
-----
-
-----
-
-
-
-
 
 [source,kotlin]
 ----
 
 ----
-
-
-
-
-
-[source,kotlin]
-----
-
-----
-
-
-
-
-
-
-
-
 
 
 
