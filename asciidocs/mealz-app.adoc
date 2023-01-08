@@ -45,6 +45,8 @@ image::mealz/mvvm.png[]
 image::mealz/aac-viewmodel.png[]
 
 
+
+
 === Create ViewModel
 
 .build.gradle (Module)
@@ -499,9 +501,12 @@ image::mealz/coroutines5.png[]
 image::mealz/coroutines6-logcat.png[]
 
 
-=== Display Image with Coil
+=== Display Image with Coil and Create Screen-Class
 
 * https://coil-kt.github.io/coil/compose/[^]
+
+
+image::mealz/project-structure.png[]
 
 .MealsCategoriesScreen.kt
 [source,kotlin]
@@ -601,6 +606,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 ----
+
+
+
 
 
 
