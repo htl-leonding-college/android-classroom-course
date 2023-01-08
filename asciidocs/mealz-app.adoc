@@ -76,13 +76,32 @@ class MealsCategoriesViewModel(
 ----
 
 
-
+.MainActivity
 [source,kotlin]
 ----
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MealzAppTheme {
+                MealsCategoriesScreen()
+            }
+        }
+    }
+}
+
 @Composable
 fun MealsCategoriesScreen() {
     val viewModel : MealsCategoriesViewModel = viewModel() // <.>
     Text(text = "Hello Tom!")
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    MealzAppTheme {
+        MealsCategoriesScreen()
+    }
 }
 ----
 
@@ -535,7 +554,6 @@ import coil.compose.AsyncImage
 @Composable
 fun MealsCategoriesScreen() {
     val viewModel: MealsCategoriesViewModel = viewModel()
-    val coroutineScope = rememberCoroutineScope()
     val meals = viewModel.mealsState.value
 
     LazyColumn(contentPadding = PaddingValues(16.dp)) {
