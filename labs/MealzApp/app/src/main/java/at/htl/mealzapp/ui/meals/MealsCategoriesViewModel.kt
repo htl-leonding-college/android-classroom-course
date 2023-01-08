@@ -29,7 +29,7 @@ class MealsCategoriesViewModel(
         Log.d(TAG, "other work")
     }
 
-    val mealsState: MutableState<List<MealResponse>> = mutableStateOf((emptyList<MealResponse>()))
+    val mealsState: MutableState<List<MealResponse>> = mutableStateOf(emptyList<MealResponse>())
 
     private suspend fun getMeals(): List<MealResponse> {
         return repository.getMeals().categories

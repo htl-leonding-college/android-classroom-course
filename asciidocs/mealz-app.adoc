@@ -179,6 +179,12 @@ implementation 'com.squareup.retrofit2.retrofit:2.9.0'
 implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 ----
 
+.manifests/AndroidManifests.xml
+[source,xml]
+----
+<uses-permission android:name="android.permission.INTERNET" />
+----
+
 .MealsWebService.kt
 [source,kotlin]
 ----
