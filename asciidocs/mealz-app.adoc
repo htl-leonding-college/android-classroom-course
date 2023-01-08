@@ -55,6 +55,28 @@ image::mealz/aac-viewmodel.png[]
 implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1'
 ----
 
+.MealsCategoriesViewModel.kt
+[source,kotlin]
+----
+package at.htl.mealzapp.ui.meals
+
+import androidx.lifecycle.ViewModel
+import at.htl.model.MealsRepository
+import at.htl.model.response.MealResponse
+
+class MealsCategoriesViewModel(
+    private val repository: MealsRepository = MealsRepository()
+) : ViewModel() {
+
+    fun getMeals(): List<MealResponse> {
+        return repository.getMeals().categories
+    }
+
+}
+----
+
+
+
 [source,kotlin]
 ----
 @Composable
@@ -121,26 +143,6 @@ import at.htl.model.response.MealsCategoriesResponse
 class MealsRepository {
 
     fun getMeals(): MealsCategoriesResponse = MealsCategoriesResponse(arrayListOf())
-
-}
-----
-
-.MealsCategoriesViewModel.kt
-[source,kotlin]
-----
-package at.htl.mealzapp.ui.meals
-
-import androidx.lifecycle.ViewModel
-import at.htl.model.MealsRepository
-import at.htl.model.response.MealResponse
-
-class MealsCategoriesViewModel(
-    private val repository: MealsRepository = MealsRepository()
-) : ViewModel() {
-
-    fun getMeals(): List<MealResponse> {
-        return repository.getMeals().categories
-    }
 
 }
 ----
